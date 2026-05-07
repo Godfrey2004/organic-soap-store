@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nature Mist | Organic Soaps & Skincare</title>
+  <meta name="description" content="Handcrafted organic soaps, body scrubs, and wellness products made with natural ingredients.">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; justify-content:space-between; align-items:center;">
+      <a href="/" class="nav-brand"><span>🌿</span> Nature Mist</a>
+      <ul class="nav-links">
+        <li><a href="/" class="active">Home</a></li>
+        <li><a href="/products">Shop All</a></li>
+        <li>
+          <a href="/cart" class="cart-icon">
+            <i class="fa-solid fa-basket-shopping" style="color:var(--lavender-dark)"></i>
+            <span class="cart-badge" id="cart-badge">0</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+      <div style="flex:1; min-width:300px; padding-right:2rem; z-index:2;">
+        <div class="hero-badges">
+          <span class="badge-pill"><i class="fa-solid fa-leaf" style="color:var(--sage)"></i> 100% Organic</span>
+          <span class="badge-pill"><i class="fa-solid fa-paw" style="color:var(--brown-light)"></i> Cruelty Free</span>
+        </div>
+        <h1 class="hero-title">Nature's purest <br><span class="highlight">ingredients</span> for your skin.</h1>
+        <p class="hero-sub">Handcrafted small-batch artisan soaps, scrubs, and balms made with ethically sourced botanicals and essential oils.</p>
+        <a href="/products" class="btn-primary">Shop Collection <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div style="flex:1; min-width:300px; text-align:right; z-index:2;">
+        <!-- Generate image placeholder here visually using css gradient since real image missing -->
+        <div style="width:100%; max-width:500px; height:400px; background:linear-gradient(45deg, #e8e0f5, #d4e8d4); border-radius:100px 20px 100px 20px; display:inline-flex; align-items:center; justify-content:center; box-shadow:var(--shadow); position:relative; overflow:hidden;">
+            <div style="font-size:5rem; opacity:0.2;">🌿</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="features-strip">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:2rem;">
+      <div class="feature-item">
+        <div class="feature-icon">✨</div>
+        <h3 class="feature-title">Pure Ingredients</h3>
+        <p class="feature-sub">No harsh chemicals or synthetics</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🖐️</div>
+        <h3 class="feature-title">Handcrafted</h3>
+        <p class="feature-sub">Made in small artisan batches</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">♻️</div>
+        <h3 class="feature-title">Eco-Friendly</h3>
+        <p class="feature-sub">Sustainable zero-waste packaging</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🚚</div>
+        <h3 class="feature-title">Nationwide Delivery</h3>
+        <p class="feature-sub">Fast & secure shipping</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section container" style="max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px;">
+    <h2 class="section-title">Featured Botanicals</h2>
+    <div class="divider"></div>
+    <p class="section-sub">Our most loved signature creations to nourish your body and soul.</p>
+
+    <div id="featured-products" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:2rem;">
+      <!-- Skeleton loaders -->
+      <div class="product-card skeleton" style="height:380px;"></div>
+      <div class="product-card skeleton" style="height:380px;"></div>
+      <div class="product-card skeleton" style="height:380px;"></div>
+      <div class="product-card skeleton" style="height:380px;"></div>
+    </div>
+    
+    <div style="text-align:center; margin-top:3rem;">
+      <a href="/products" class="btn-outline">View All Products</a>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:2rem;">
+      <div>
+        <h3 style="color:white; font-size:1.5rem; margin-bottom:1rem; font-family:'Playfair Display', serif;"><span>🌿</span> Nature Mist</h3>
+        <p style="font-size:0.85rem; color:rgba(255,255,255,0.7); max-width:250px;">Elevating your daily cleansing ritual with the healing power of nature.</p>
+      </div>
+      <div>
+        <h5>Shop</h5>
+        <a href="/products?category=soap">Organic Soaps</a>
+        <a href="/products?category=skincare">Skincare</a>
+        <a href="/products?category=wellness">Wellness</a>
+      </div>
+      <div>
+        <h5>Information</h5>
+        <a href="#">About Us</a>
+        <a href="#">Contact</a>
+        <a href="#">Shipping Policy</a>
+      </div>
+      <div>
+        <h5>Connect</h5>
+        <a href="#"><i class="fa-brands fa-instagram"></i> Instagram</a>
+        <a href="#"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+      </div>
+    </div>
+    <div class="footer-bottom" style="display:flex; align-items:center; justify-content:center; gap:1rem; position:relative;">
+      <p style="margin:0;">&copy; 2024 Nature Mist. All rights reserved.</p>
+      <a href="/naturemist-manage" title="" style="color:rgba(255,255,255,0.15); font-size:0.75rem; text-decoration:none; transition:color 0.3s; line-height:1;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.15)'">
+        <i class="fas fa-lock"></i>
+      </a>
+    </div>
+  </footer>
+
+  <a href="https://wa.me/919876543210" class="whatsapp-float" target="_blank" title="Chat with us">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('/api/products?featured=true');
+        const data = await res.json();
+        
+        const container = document.getElementById('featured-products');
+        container.innerHTML = '';
+        
+        if (data.products.length === 0) {
+          container.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">No featured products found.</p>';
+          return;
+        }
+
+        data.products.slice(0, 4).forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          card.innerHTML = `
+            <div class="product-img">
+              ${p.original_price ? `<span class="product-badge sale">Sale</span>` : ''}
+              <a href="/product/${p.id}"><div style="width:100%; height:100%; background:#e8e0f5; display:flex; align-items:center; justify-content:center; font-size:3rem;">🧼</div></a>
+            </div>
+            <div class="product-body">
+              <div class="product-category">${p.category}</div>
+              <h3 class="product-name"><a href="/product/${p.id}">${p.name}</a></h3>
+              <p class="product-desc">${p.short_desc}</p>
+              <div class="product-price">
+                <span class="price-current">₹${p.price}</span>
+                ${p.original_price ? `<span class="price-original">₹${p.original_price}</span>` : ''}
+              </div>
+              <button class="btn-sage" style="width:100%;" onclick="addToCart(${p.id}, 1, this)">🛒 Add to Cart</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        document.getElementById('featured-products').innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Failed to load products.</p>';
+      }
+    });
+  </script>
+</body>
+</html>

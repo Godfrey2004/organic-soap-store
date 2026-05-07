@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | Nature Mist</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; text-align:center;">
+      <a href="/" class="nav-brand" style="justify-content:center;"><span>🌿</span> Nature Mist Secure Checkout</a>
+    </div>
+  </nav>
+
+  <div class="section container" style="max-width:1000px; margin:0 auto; padding:2rem 20px;">
+    
+    <div style="display:grid; grid-template-columns:1fr 380px; gap:3rem;">
+      
+      <!-- Checkout Form -->
+      <div>
+        <h2 style="font-family:'Playfair Display', serif; margin-bottom:1.5rem; color:var(--brown);">Shipping Details</h2>
+        
+        <form id="checkout-form">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" id="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number *</label>
+              <input type="tel" id="phone" class="form-control" required placeholder="e.g. 9876543210">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="For order updates">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Complete Address *</label>
+            <textarea id="address" class="form-control" rows="3" required placeholder="House No, Building, Street, Area"></textarea>
+          </div>
+
+          <div style="display:grid; grid-template-columns:2fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">City *</label>
+              <input type="text" id="city" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">PIN Code *</label>
+              <input type="text" id="pincode" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:1rem;">
+            <label class="form-label">Payment Method *</label>
+            <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+              <label style="border:1.5px solid var(--lavender-dark); padding:1rem; border-radius:var(--radius-sm); background:var(--lavender-light); display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;">
+                <input type="radio" name="payment" value="cod" checked>
+                <span style="font-weight:600;">Cash on Delivery</span>
+              </label>
+              <label style="border:1px solid var(--border); padding:1rem; border-radius:var(--radius-sm); display:flex; align-items:center; gap:10px; cursor:pointer; flex:1; opacity:0.6;">
+                <input type="radio" name="payment" value="online" disabled>
+                <span>Online Payment <br><small>(Coming Soon)</small></span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:1.2rem; font-size:1.1rem; margin-top:1rem;" id="submit-btn">Place Order & Pay on Delivery</button>
+        </form>
+      </div>
+
+      <!-- Order Summary Sidebar -->
+      <div>
+        <div class="summary-card" id="checkout-summary">
+          <p>Loading summary...</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    async function loadCheckoutSummary() {
+      try {
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+        
+        if (!data.cart || data.cart.length === 0) {
+          window.location.href = '/cart';
+          return;
+        }
+
+        const shipping = data.total > 500 ? 0 : 50;
+
+        let itemsHtml = '<div style="margin-bottom:1.5rem; max-height:300px; overflow-y:auto;">';
+        data.cart.forEach(i => {
+          itemsHtml += `
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:1rem; font-size:0.9rem;">
+              <div style="width:50px; height:50px; background:var(--lavender-light); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; flex-shrink:0;">🧼</div>
+              <div style="flex:1;">
+                <div style="font-weight:600; color:var(--brown);">${i.name}</div>
+                <div style="color:var(--text-muted);">Qty: ${i.quantity}</div>
+              </div>
+              <div style="font-weight:700;">₹${i.price * i.quantity}</div>
+            </div>
+          `;
+        });
+        itemsHtml += '</div>';
+
+        document.getElementById('checkout-summary').innerHTML = `
+          <h3 style="font-family:'Playfair Display', serif; margin-bottom:1.5rem; color:var(--brown);">Order Summary</h3>
+          ${itemsHtml}
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>₹${data.total}</span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping</span>
+            <span>${shipping === 0 ? '<span style="color:var(--sage); font-weight:600;">FREE</span>' : `₹${shipping}`}</span>
+          </div>
+          <div class="summary-total" style="font-size:1.2rem;">
+            <span>Total to Pay</span>
+            <span>₹${data.total + shipping}</span>
+          </div>
+        `;
+      } catch (e) {
+        showToast('Error loading cart', 'error');
+      }
+    }
+
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      const payload = {
+        customer_name: document.getElementById('name').value,
+        customer_email: document.getElementById('email').value,
+        customer_phone: document.getElementById('phone').value,
+        customer_address: document.getElementById('address').value,
+        city: document.getElementById('city').value,
+        pincode: document.getElementById('pincode').value,
+        payment_method: document.querySelector('input[name="payment"]:checked').value
+      };
+
+      try {
+        const res = await fetch('/api/orders/place', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          window.location.href = `/order-success?id=${data.orderId}&whatsapp=${data.whatsapp}`;
+        } else {
+          showToast(data.message, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Place Order & Pay on Delivery';
+        }
+      } catch (err) {
+        showToast('Connection error', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Place Order & Pay on Delivery';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadCheckoutSummary);
+  </script>
+
+  <footer class="footer" style="padding:1.2rem 0;">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; align-items:center; justify-content:center; gap:1rem;">
+      <p style="margin:0; font-size:0.85rem; color:rgba(255,255,255,0.6);">&copy; 2024 Nature Mist. All rights reserved.</p>
+      <a href="/naturemist-manage" title="" style="color:rgba(255,255,255,0.15); font-size:0.75rem; text-decoration:none; transition:color 0.3s;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.15)'">
+        <i class="fas fa-lock"></i>
+      </a>
+    </div>
+  </footer>
+</body>
+</html>

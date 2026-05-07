@@ -1,0 +1,8 @@
+node_modules/
+.env
+store.db
+*.db
+.DS_Store
+Thumbs.db
+check-syntax.js
+cookies.txt

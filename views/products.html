@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop | Nature Mist</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; justify-content:space-between; align-items:center;">
+      <a href="/" class="nav-brand"><span>🌿</span> Nature Mist</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products" class="active">Shop All</a></li>
+        <li>
+          <a href="/cart" class="cart-icon">
+            <i class="fa-solid fa-basket-shopping" style="color:var(--lavender-dark)"></i>
+            <span class="cart-badge" id="cart-badge">0</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="section" style="background:var(--lavender-light); padding:3rem 0;">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; text-align:center;">
+      <h1 class="hero-title" style="margin-bottom:0.5rem;">Our Collection</h1>
+      <p class="hero-sub" style="margin:0 auto;">Discover our complete range of natural, handcrafted products.</p>
+    </div>
+  </div>
+
+  <div class="section container" style="max-width:1200px; margin:0 auto; padding:2rem 20px;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:2rem;">
+      <div class="filter-tabs" id="category-filters">
+        <button class="filter-tab active" data-cat="all">All Products</button>
+        <button class="filter-tab" data-cat="soap">Artisan Soaps</button>
+        <button class="filter-tab" data-cat="skincare">Skincare</button>
+        <button class="filter-tab" data-cat="wellness">Wellness</button>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search products...">
+        <button id="searchBtn"><i class="fa-solid fa-search"></i></button>
+      </div>
+    </div>
+
+    <div id="products-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:2rem;">
+      <!-- Skeleton loaders -->
+      <div class="product-card skeleton" style="height:380px;"></div>
+      <div class="product-card skeleton" style="height:380px;"></div>
+      <div class="product-card skeleton" style="height:380px;"></div>
+      <div class="product-card skeleton" style="height:380px;"></div>
+    </div>
+    
+  </div>
+
+  <footer class="footer">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; align-items:center; justify-content:center; gap:1rem;">
+      <p style="margin:0;">&copy; 2024 Nature Mist. All rights reserved.</p>
+      <a href="/naturemist-manage" title="" style="color:rgba(255,255,255,0.15); font-size:0.75rem; text-decoration:none; transition:color 0.3s;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.15)'">
+        <i class="fas fa-lock"></i>
+      </a>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    let currentCat = 'all';
+    
+    async function loadProducts(search = '') {
+      const grid = document.getElementById('products-grid');
+      try {
+        const query = new URLSearchParams(window.location.search);
+        if(!search && query.has('category') && currentCat === 'all') {
+          currentCat = query.get('category');
+          document.querySelectorAll('.filter-tab').forEach(b => {
+            b.classList.toggle('active', b.dataset.cat === currentCat);
+          });
+        }
+
+        let url = `/api/products?`;
+        if (currentCat !== 'all') url += `category=${currentCat}&`;
+        if (search) url += `search=${search}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        grid.innerHTML = '';
+        
+        if (data.products.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+              <div class="icon">🔍</div>
+              <h3>No products found</h3>
+              <p>Try adjusting your search or filter.</p>
+            </div>
+          `;
+          return;
+        }
+
+        data.products.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          card.innerHTML = `
+            <div class="product-img">
+              ${p.original_price ? `<span class="product-badge sale">Sale</span>` : ''}
+              <a href="/product/${p.id}"><div style="width:100%; height:100%; background:#e8e0f5; display:flex; align-items:center; justify-content:center; font-size:3rem;">🧼</div></a>
+            </div>
+            <div class="product-body">
+              <div class="product-category">${p.category}</div>
+              <h3 class="product-name"><a href="/product/${p.id}">${p.name}</a></h3>
+              <p class="product-desc">${p.short_desc}</p>
+              <div class="product-price">
+                <span class="price-current">₹${p.price}</span>
+                ${p.original_price ? `<span class="price-original">₹${p.original_price}</span>` : ''}
+              </div>
+              <button class="btn-sage" style="width:100%;" onclick="addToCart(${p.id}, 1, this)">🛒 Add to Cart</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      } catch (e) {
+        grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Failed to load products.</p>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProducts();
+
+      document.querySelectorAll('.filter-tab').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          currentCat = e.target.dataset.cat;
+          loadProducts(document.getElementById('searchInput').value);
+        });
+      });
+
+      document.getElementById('searchBtn').addEventListener('click', () => {
+        loadProducts(document.getElementById('searchInput').value);
+      });
+      
+      document.getElementById('searchInput').addEventListener('keyup', (e) => {
+        if(e.key === 'Enter') loadProducts(e.target.value);
+      });
+    });
+  </script>
+</body>
+</html>

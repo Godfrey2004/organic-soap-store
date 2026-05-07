@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart | Nature Mist</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; justify-content:space-between; align-items:center;">
+      <a href="/" class="nav-brand"><span>🌿</span> Nature Mist</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products">Shop All</a></li>
+        <li>
+          <a href="/cart" class="cart-icon" style="background:var(--lavender);">
+            <i class="fa-solid fa-basket-shopping" style="color:var(--lavender-dark)"></i>
+            <span class="cart-badge" id="cart-badge">0</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="section container" style="max-width:1000px; margin:0 auto; padding:2rem 20px;">
+    <h1 class="section-title" style="text-align:left; font-size:2rem; margin-bottom:2rem;">Your Cart</h1>
+
+    <div id="cart-content" style="display:grid; grid-template-columns:1fr 350px; gap:2rem;">
+      <div class="skeleton" style="height:300px; border-radius:var(--radius);"></div>
+      <div class="skeleton" style="height:300px; border-radius:var(--radius);"></div>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    async function loadCart() {
+      try {
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+        
+        const container = document.getElementById('cart-content');
+        
+        if (!data.cart || data.cart.length === 0) {
+          container.style.display = 'block';
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">🛒</div>
+              <h3>Your cart is empty</h3>
+              <p>Looks like you haven't added any natural goodness yet.</p>
+              <a href="/products" class="btn-primary" style="margin-top:1rem;">Start Shopping</a>
+            </div>
+          `;
+          return;
+        }
+
+        container.style.display = 'grid';
+        let itemsHtml = '<div class="cart-items">';
+        data.cart.forEach(item => {
+          itemsHtml += `
+            <div class="cart-item">
+              <div class="cart-item-img" style="display:flex; align-items:center; justify-content:center; font-size:2rem;">🧼</div>
+              <div style="flex:1;">
+                <h4 style="font-family:'Playfair Display', serif; color:var(--brown); margin-bottom:0.2rem;"><a href="/product/${item.id}">${item.name}</a></h4>
+                <p style="font-size:0.9rem; font-weight:700; color:var(--lavender-dark);">₹${item.price}</p>
+              </div>
+              <div class="qty-control">
+                <button class="qty-btn" onclick="updateQty(${item.id}, ${item.quantity - 1})">-</button>
+                <span style="width:20px; text-align:center; font-size:0.9rem; font-weight:600;">${item.quantity}</span>
+                <button class="qty-btn" onclick="updateQty(${item.id}, ${item.quantity + 1})">+</button>
+              </div>
+              <div style="text-align:right; min-width:80px;">
+                <p style="font-weight:700; margin-bottom:0.3rem;">₹${item.price * item.quantity}</p>
+                <button style="background:none; border:none; color:#e8847a; font-size:0.8rem; cursor:pointer;" onclick="removeItem(${item.id})">Remove</button>
+              </div>
+            </div>
+          `;
+        });
+        itemsHtml += '</div>';
+
+        const shipping = data.total > 500 ? 0 : 50;
+
+        const summaryHtml = `
+          <div class="summary-card">
+            <h3 style="font-family:'Playfair Display', serif; margin-bottom:1.5rem; color:var(--brown);">Order Summary</h3>
+            <div class="summary-row">
+              <span>Subtotal (${data.count} items)</span>
+              <span>₹${data.total}</span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span>${shipping === 0 ? '<span style="color:var(--sage); font-weight:600;">FREE</span>' : `₹${shipping}`}</span>
+            </div>
+            ${data.total < 500 ? `<p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem; text-align:right;">Add ₹${500 - data.total} more for free shipping!</p>` : ''}
+            <div class="summary-total">
+              <span>Total</span>
+              <span>₹${data.total + shipping}</span>
+            </div>
+            <a href="/checkout" class="btn-primary" style="width:100%; justify-content:center; margin-top:1.5rem; padding:1rem;">Proceed to Checkout</a>
+            <button onclick="clearCart()" class="btn-outline" style="width:100%; justify-content:center; margin-top:0.75rem; border-color:#e5ddd5; color:var(--text-muted);">Clear Cart</button>
+          </div>
+        `;
+
+        container.innerHTML = itemsHtml + summaryHtml;
+
+      } catch (e) {
+        document.getElementById('cart-content').innerHTML = '<p>Failed to load cart.</p>';
+      }
+    }
+
+    async function updateQty(id, qty) {
+      try {
+        await fetch('/api/cart/update', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: id, quantity: qty })
+        });
+        loadCart();
+        updateCartCount();
+      } catch (e) { showToast('Error updating quantity', 'error'); }
+    }
+
+    async function removeItem(id) {
+      try {
+        await fetch(`/api/cart/remove/${id}`, { method: 'DELETE' });
+        loadCart();
+        updateCartCount();
+        showToast('Item removed');
+      } catch (e) { showToast('Error removing item', 'error'); }
+    }
+
+    async function clearCart() {
+      if(!confirm('Are you sure you want to clear your cart?')) return;
+      try {
+        await fetch('/api/cart/clear', { method: 'DELETE' });
+        loadCart();
+        updateCartCount();
+      } catch (e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCart);
+  </script>
+
+  <footer class="footer" style="padding:1.2rem 0;">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; align-items:center; justify-content:center; gap:1rem;">
+      <p style="margin:0; font-size:0.85rem; color:rgba(255,255,255,0.6);">&copy; 2024 Nature Mist. All rights reserved.</p>
+      <a href="/naturemist-manage" title="" style="color:rgba(255,255,255,0.15); font-size:0.75rem; text-decoration:none; transition:color 0.3s;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.15)'">
+        <i class="fas fa-lock"></i>
+      </a>
+    </div>
+  </footer>
+</body>
+</html>

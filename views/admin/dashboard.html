@@ -1,0 +1,430 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Nature Mist Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Admin Layout */
+    body { background: #f5f0fb; min-height: 100vh; }
+    .admin-layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .admin-sidebar {
+      width: 240px;
+      background: linear-gradient(180deg, #2d1b4e 0%, #4a3570 100%);
+      color: #fff;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-logo {
+      padding: 1.8rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-logo h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-logo p { font-size: 0.75rem; opacity: 0.6; margin: 4px 0 0; }
+    .sidebar-nav { flex: 1; padding: 1rem 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 0.85rem 1.5rem;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border-left-color: var(--lavender);
+    }
+    .nav-item i { width: 18px; text-align: center; }
+    .nav-section-title {
+      padding: 0.6rem 1.5rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.4;
+      margin-top: 0.5rem;
+    }
+    .sidebar-footer {
+      padding: 1.2rem 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .logout-btn {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+    .logout-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
+    /* Main content */
+    .admin-main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    /* Top bar */
+    .admin-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .admin-topbar h1 {
+      font-family: 'Playfair Display', serif;
+      color: var(--brown);
+      font-size: 1.5rem;
+      margin: 0;
+    }
+    .topbar-actions { display: flex; align-items: center; gap: 1rem; }
+    .topbar-badge {
+      background: var(--lavender-light);
+      color: var(--lavender-dark);
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    /* Stats cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: transform 0.2s ease;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .stat-icon {
+      width: 54px; height: 54px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .stat-icon.purple { background: linear-gradient(135deg, #e8e0f5, #d4c5f0); }
+    .stat-icon.green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
+    .stat-icon.orange { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .stat-icon.red { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+    .stat-info p { font-size: 0.8rem; color: var(--text-muted); margin: 0 0 4px; font-weight: 500; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--brown); line-height: 1; }
+    .stat-change { font-size: 0.75rem; color: var(--sage); font-weight: 600; margin-top: 3px; }
+
+    /* Section card */
+    .admin-card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .admin-card-header {
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .admin-card-header h3 {
+      font-family: 'Playfair Display', serif;
+      color: var(--brown);
+      font-size: 1rem;
+      margin: 0;
+    }
+    .admin-card-body { padding: 0; }
+
+    /* Tables */
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th {
+      padding: 0.9rem 1.2rem;
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      background: #fafafa;
+      border-bottom: 1px solid var(--border);
+    }
+    .admin-table td {
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--lavender-light);
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: #fafafa; }
+
+    /* Status badges */
+    .status-badge {
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    .status-pending { background: #fef3c7; color: #d97706; }
+    .status-confirmed { background: #dbeafe; color: #2563eb; }
+    .status-shipped { background: #ede9fe; color: #7c3aed; }
+    .status-delivered { background: #dcfce7; color: #16a34a; }
+    .status-cancelled { background: #fee2e2; color: #dc2626; }
+
+    /* Low stock warning */
+    .low-stock-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.8rem 1.2rem;
+      border-bottom: 1px solid var(--lavender-light);
+      font-size: 0.88rem;
+    }
+    .low-stock-item:last-child { border-bottom: none; }
+    .stock-count {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <h2>🌿 Nature Mist</h2>
+        <p>Admin Control Panel</p>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Main</div>
+        <a href="/naturemist-manage/dashboard" class="nav-item active" id="nav-dashboard">
+          <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <div class="nav-section-title">Management</div>
+        <a href="/naturemist-manage/products" class="nav-item" id="nav-products">
+          <i class="fas fa-soap"></i> Products
+        </a>
+        <a href="/naturemist-manage/orders" class="nav-item" id="nav-orders">
+          <i class="fas fa-shopping-bag"></i> Orders
+          <span id="sidebar-pending" style="margin-left:auto; background:rgba(239,68,68,0.2); color:#fca5a5; padding:2px 8px; border-radius:999px; font-size:0.7rem; display:none;"></span>
+        </a>
+        <div class="nav-section-title">Configuration</div>
+        <a href="/naturemist-manage/settings" class="nav-item" id="nav-settings">
+          <i class="fas fa-cog"></i> Settings
+        </a>
+        <a href="/" class="nav-item" target="_blank">
+          <i class="fas fa-store"></i> View Store
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div>
+          <h1>Dashboard Overview</h1>
+          <p style="color:var(--text-muted); margin:0; font-size:0.88rem;" id="welcome-msg">Loading...</p>
+        </div>
+        <div class="topbar-actions">
+          <span class="topbar-badge"><i class="fas fa-circle" style="color:var(--sage); font-size:0.5rem;"></i> Live</span>
+          <a href="/naturemist-manage/products" class="btn-primary" style="text-decoration:none; padding:0.6rem 1.2rem; font-size:0.88rem;">
+            <i class="fas fa-plus"></i> Add Product
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon purple">📦</div>
+          <div class="stat-info">
+            <p>Total Products</p>
+            <div class="stat-value" id="stat-products">—</div>
+            <div class="stat-change">Active listings</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">🛒</div>
+          <div class="stat-info">
+            <p>Total Orders</p>
+            <div class="stat-value" id="stat-orders">—</div>
+            <div class="stat-change">All time</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">⏳</div>
+          <div class="stat-info">
+            <p>Pending Orders</p>
+            <div class="stat-value" id="stat-pending">—</div>
+            <div class="stat-change">Need attention</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">💰</div>
+          <div class="stat-info">
+            <p>Total Revenue</p>
+            <div class="stat-value" id="stat-revenue">—</div>
+            <div class="stat-change">Excl. cancelled</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders + Low Stock -->
+      <div class="two-col">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3><i class="fas fa-clock" style="color:var(--lavender-dark);"></i> Recent Orders</h3>
+            <a href="/naturemist-manage/orders" style="font-size:0.82rem; color:var(--lavender-dark); text-decoration:none; font-weight:600;">View All →</a>
+          </div>
+          <div class="admin-card-body">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-orders">
+                <tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:2rem;">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i> Low Stock Alert</h3>
+            <a href="/naturemist-manage/products" style="font-size:0.82rem; color:var(--lavender-dark); text-decoration:none; font-weight:600;">Manage →</a>
+          </div>
+          <div class="admin-card-body" id="low-stock-list">
+            <div style="padding:2rem; text-align:center; color:var(--text-muted);">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Auth guard
+    async function checkAuth() {
+      const res = await fetch('/api/admin/check');
+      const d = await res.json();
+      if (!d.isAdmin) window.location.href = '/naturemist-manage';
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/admin/dashboard');
+        const data = await res.json();
+        if (!data.success) return;
+        const s = data.stats;
+
+        document.getElementById('stat-products').textContent = s.totalProducts;
+        document.getElementById('stat-orders').textContent = s.totalOrders;
+        document.getElementById('stat-pending').textContent = s.pendingOrders;
+        document.getElementById('stat-revenue').textContent = `₹${(s.totalRevenue || 0).toLocaleString('en-IN')}`;
+
+        // Welcome message
+        const hour = new Date().getHours();
+        const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+        document.getElementById('welcome-msg').textContent = `${greet}! Here's your store overview for today.`;
+
+        // Pending badge in sidebar
+        if (s.pendingOrders > 0) {
+          const badge = document.getElementById('sidebar-pending');
+          badge.textContent = s.pendingOrders;
+          badge.style.display = 'inline-block';
+        }
+
+        // Recent orders
+        const tbody = document.getElementById('recent-orders');
+        if (s.recentOrders.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:2rem;">No orders yet</td></tr>';
+        } else {
+          tbody.innerHTML = s.recentOrders.map(o => `
+            <tr>
+              <td><strong>#${o.id}</strong></td>
+              <td>${o.customer_name}</td>
+              <td><strong>₹${o.total_amount}</strong></td>
+              <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+            </tr>
+          `).join('');
+        }
+
+        // Low stock
+        const lsEl = document.getElementById('low-stock-list');
+        if (s.lowStock.length === 0) {
+          lsEl.innerHTML = '<div style="padding:2rem; text-align:center; color:var(--sage);"><i class="fas fa-check-circle" style="font-size:2rem; margin-bottom:0.5rem; display:block;"></i>All products have healthy stock!</div>';
+        } else {
+          lsEl.innerHTML = s.lowStock.map(p => `
+            <div class="low-stock-item">
+              <div>
+                <div style="font-weight:600; color:var(--brown);">${p.name}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">${p.category}</div>
+              </div>
+              <span class="stock-count">${p.stock} left</span>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('Dashboard load error:', e);
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/naturemist-manage';
+    }
+
+    checkAuth().then(loadDashboard);
+  </script>
+</body>
+</html>

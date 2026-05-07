@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmed! | Nature Mist</title>
+  <meta name="description" content="Your order has been successfully placed. Thank you for shopping with Nature Mist.">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .success-container {
+      max-width: 600px;
+      margin: 4rem auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, var(--sage), #5e9e5e);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+      font-size: 2.5rem;
+      animation: popIn 0.6s cubic-bezier(0.68,-0.55,0.27,1.55) forwards;
+      box-shadow: 0 8px 25px rgba(138,171,138,0.4);
+    }
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .success-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      animation: slideUp 0.5s ease 0.3s both;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .order-id-badge {
+      background: var(--lavender-light);
+      color: var(--lavender-dark);
+      border: 1.5px solid var(--lavender);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 1rem;
+      display: inline-block;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin: 1rem 0;
+      letter-spacing: 0.05em;
+    }
+    .info-list {
+      list-style: none;
+      padding: 0;
+      margin: 1.5rem 0;
+      text-align: left;
+    }
+    .info-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--lavender-light);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .info-list li:last-child { border-bottom: none; }
+    .info-list li i { color: var(--sage); width: 20px; text-align: center; }
+    .whatsapp-btn {
+      background: linear-gradient(135deg, #25d366, #128c7e);
+      color: #fff;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      width: 100%;
+      justify-content: center;
+      margin: 0.5rem 0;
+    }
+    .whatsapp-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37,211,102,0.35);
+    }
+    .confetti {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; text-align:center;">
+      <a href="/" class="nav-brand" style="justify-content:center;"><span>🌿</span> Nature Mist</a>
+    </div>
+  </nav>
+
+  <div class="success-container">
+    <div class="success-icon">✓</div>
+    
+    <div class="success-card">
+      <h1 style="font-family:'Playfair Display', serif; color:var(--brown); margin-bottom:0.5rem; font-size:1.8rem;">
+        Order Placed Successfully!
+      </h1>
+      <p style="color:var(--text-muted); margin-bottom:1rem;">
+        Thank you for choosing Nature Mist. Your handcrafted goodness is on its way! 🌸
+      </p>
+
+      <div class="order-id-badge" id="order-id-display">Order #---</div>
+
+      <ul class="info-list">
+        <li><i class="fas fa-truck"></i> Expected delivery: <strong style="color:var(--brown); margin-left:auto;">3–5 business days</strong></li>
+        <li><i class="fas fa-money-bill-wave"></i> Payment: <strong style="color:var(--brown); margin-left:auto;">Cash on Delivery</strong></li>
+        <li><i class="fas fa-phone-alt"></i> We'll call to confirm your order shortly.</li>
+        <li><i class="fas fa-box"></i> You'll receive a tracking update via WhatsApp.</li>
+      </ul>
+
+      <a id="whatsapp-link" href="#" target="_blank" class="whatsapp-btn">
+        <i class="fab fa-whatsapp" style="font-size:1.3rem;"></i>
+        Confirm Order via WhatsApp
+      </a>
+
+      <div style="display:flex; gap:1rem; margin-top:1rem; flex-wrap:wrap;">
+        <a href="/products" class="btn-secondary" style="flex:1; justify-content:center; text-align:center; padding:0.9rem 1rem; text-decoration:none;">
+          <i class="fas fa-shopping-bag"></i> Continue Shopping
+        </a>
+        <a href="/" class="btn-primary" style="flex:1; justify-content:center; text-align:center; padding:0.9rem 1rem; text-decoration:none;">
+          <i class="fas fa-home"></i> Back to Home
+        </a>
+      </div>
+    </div>
+
+    <p style="color:var(--text-muted); font-size:0.85rem; margin-top:2rem;">
+      Questions? Contact us at <a href="mailto:hello@naturemist.in" style="color:var(--lavender-dark);">hello@naturemist.in</a>
+    </p>
+  </div>
+
+  <div class="confetti" id="confetti-canvas"></div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    // Parse URL params
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('id');
+    const whatsappNum = params.get('whatsapp') || '919876543210';
+
+    if (orderId) {
+      document.getElementById('order-id-display').textContent = `Order #${orderId}`;
+    }
+
+    // WhatsApp link
+    const msg = encodeURIComponent(`Hi Nature Mist! 🌿\nI just placed Order #${orderId || 'N/A'} on your website.\nPlease confirm my order. Thank you!`);
+    document.getElementById('whatsapp-link').href = `https://wa.me/${whatsappNum}?text=${msg}`;
+
+    // Confetti animation
+    function launchConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const colors = ['#b8a9d4', '#8aab8a', '#f4a261', '#e76f51', '#f9c74f', '#90e0ef'];
+      for (let i = 0; i < 80; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.cssText = `
+          left: ${Math.random() * 100}vw;
+          top: -20px;
+          background: ${colors[Math.floor(Math.random() * colors.length)]};
+          width: ${6 + Math.random() * 8}px;
+          height: ${6 + Math.random() * 8}px;
+          border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+          animation-duration: ${1.5 + Math.random() * 2}s;
+          animation-delay: ${Math.random() * 0.8}s;
+          opacity: ${0.7 + Math.random() * 0.3};
+        `;
+        canvas.appendChild(p);
+        setTimeout(() => p.remove(), 4000);
+      }
+    }
+    launchConfetti();
+  </script>
+
+  <footer class="footer" style="padding:1.2rem 0; margin-top:2rem;">
+    <div class="container" style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; align-items:center; justify-content:center; gap:1rem;">
+      <p style="margin:0; font-size:0.85rem; color:rgba(255,255,255,0.6);">&copy; 2024 Nature Mist. All rights reserved.</p>
+      <a href="/naturemist-manage" title="" style="color:rgba(255,255,255,0.15); font-size:0.75rem; text-decoration:none; transition:color 0.3s;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.15)'">
+        <i class="fas fa-lock"></i>
+      </a>
+    </div>
+  </footer>
+</body>
+</html>
