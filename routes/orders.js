@@ -66,6 +66,31 @@ router.post('/place', async (req, res) => {
       .eq('key', 'store_whatsapp')
       .single();
 
+    // Google Sheets integration (if configured)
+    try {
+      if (process.env.GOOGLE_SHEET_WEBAPP_URL) {
+        const orderString = cart.map(item => `${item.name} (x${item.quantity})`).join(', ');
+        const payload = {
+          order_id: orderId,
+          date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+          customer_name: customer_name,
+          email: customer_email || 'N/A',
+          phone: customer_phone,
+          address: `${customer_address}, ${city}, ${pincode}`,
+          items: orderString,
+          total: total
+        };
+        // Run in background (fire and forget)
+        fetch(process.env.GOOGLE_SHEET_WEBAPP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(err => console.error("Google Sheet error:", err));
+      }
+    } catch (sheetErr) {
+      console.error("Google Sheets logging failed:", sheetErr);
+    }
+
     res.json({
       success: true,
       orderId,
