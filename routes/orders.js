@@ -59,12 +59,8 @@ router.post('/place', async (req, res) => {
 
     req.session.cart = [];
 
-    // Get WhatsApp setting
-    const { data: waSetting } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('key', 'store_whatsapp')
-      .single();
+    // Hardcode WhatsApp number to ensure it never uses a dummy database setting
+    const waSetting = { value: '918870951141' };
 
     // Google Sheets integration (if configured)
     try {
