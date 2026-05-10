@@ -176,7 +176,11 @@
     // Parse URL params
     const params = new URLSearchParams(window.location.search);
     const orderId = params.get('id');
-    const whatsappNum = params.get('whatsapp') || '918870951141';
+    let whatsappNum = params.get('whatsapp');
+    
+    if (!whatsappNum || whatsappNum === 'null' || whatsappNum === 'undefined') {
+      whatsappNum = '918870951141';
+    }
 
     if (orderId) {
       document.getElementById('order-id-display').textContent = `Order #${orderId}`;
