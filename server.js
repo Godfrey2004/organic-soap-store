@@ -13,6 +13,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Trust Vercel's edge proxy so secure cookies work
+app.set('trust proxy', 1);
+
 // Cookie-based session — works on Vercel serverless (no memory store needed)
 app.use(cookieSession({
   name: 'nm_session',

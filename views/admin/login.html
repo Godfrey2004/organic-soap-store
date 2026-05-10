@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -192,7 +192,7 @@
         if (data.success) {
           btn.innerHTML = '<i class="fas fa-check"></i> Success! Redirecting...';
           btn.style.background = 'linear-gradient(135deg, #8aab8a, #5e9e5e)';
-          setTimeout(() => window.location.href = '/naturemist-manage', 800);
+          setTimeout(() => window.location.href = '/naturemist-manage/dashboard', 800);
         } else {
           errTxt.textContent = data.message || 'Invalid credentials';
           errEl.style.display = 'block';
