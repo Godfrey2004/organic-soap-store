@@ -4,23 +4,10 @@ const supabase = require('../db');
 const { requireAdmin } = require('../middleware/adminAuth');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 
-// Multer storage — saves to public/images/
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '..', 'public', 'images');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const name = `product-${Date.now()}${ext}`;
-    cb(null, name);
-  }
-});
+// Use memory storage — Vercel filesystem is read-only, images go to Supabase Storage
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
@@ -29,11 +16,30 @@ const upload = multer({
   }
 });
 
-// Image Upload Endpoint
-router.post('/upload-image', requireAdmin, upload.single('image'), (req, res) => {
+// Image Upload Endpoint — uploads to Supabase Storage
+router.post('/upload-image', requireAdmin, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'No image file received' });
-  const url = `/images/${req.file.filename}`;
-  res.json({ success: true, url, message: 'Image uploaded!' });
+  try {
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const filename = `product-${Date.now()}${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(filename, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(filename);
+
+    res.json({ success: true, url: urlData.publicUrl, message: 'Image uploaded!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Upload failed: ' + err.message });
+  }
 });
 
 // Admin Login
