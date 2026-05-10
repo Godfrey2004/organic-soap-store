@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -81,8 +81,9 @@
 
         const container = document.getElementById('product-container');
         container.innerHTML = `
-          <div style="background:var(--lavender-light); border-radius:var(--radius); overflow:hidden; display:flex; align-items:center; justify-content:center; min-height:400px; font-size:5rem;">
-            🧼
+          <div style="background:var(--lavender-light); border-radius:var(--radius); overflow:hidden; position:relative; min-height:400px; display:flex; align-items:center; justify-content:center;">
+            ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" style="width:100%; height:100%; position:absolute; inset:0; object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+            <div style="font-size:5rem; display:${p.image_url ? 'none' : 'flex'}; align-items:center; justify-content:center; width:100%; height:100%;">🧼</div>
           </div>
           <div>
             <div class="product-category" style="font-size:0.85rem; margin-bottom:0.5rem;">${p.category}</div>
@@ -131,7 +132,10 @@
             card.className = 'product-card';
             card.innerHTML = `
               <div class="product-img">
-                <a href="/product/${rp.id}"><div style="width:100%; height:100%; background:#e8e0f5; display:flex; align-items:center; justify-content:center; font-size:3rem;">🧼</div></a>
+                <a href="/product/${rp.id}">
+                  ${rp.image_url ? `<img src="${rp.image_url}" alt="${rp.name}" style="width:100%; height:100%; object-fit:cover; border-radius:10px 10px 0 0;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                  <div style="width:100%; height:100%; background:#e8e0f5; display:${rp.image_url ? 'none' : 'flex'}; align-items:center; justify-content:center; font-size:3rem; border-radius:10px 10px 0 0;">🧼</div>
+                </a>
               </div>
               <div class="product-body">
                 <h3 class="product-name"><a href="/product/${rp.id}">${rp.name}</a></h3>
