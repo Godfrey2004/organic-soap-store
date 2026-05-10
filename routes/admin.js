@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const supabase = require('../db');
 const { requireAdmin } = require('../middleware/adminAuth');
 const multer = require('multer');
 const path = require('path');
@@ -63,9 +63,14 @@ router.get('/check', (req, res) => {
 // ---- PRODUCTS CRUD ----
 
 // GET all products (admin view, includes inactive)
-router.get('/products', requireAdmin, (req, res) => {
+router.get('/products', requireAdmin, async (req, res) => {
   try {
-    const products = db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
     res.json({ success: true, products });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -73,20 +78,32 @@ router.get('/products', requireAdmin, (req, res) => {
 });
 
 // CREATE product
-router.post('/products', requireAdmin, (req, res) => {
+router.post('/products', requireAdmin, async (req, res) => {
   try {
     const { name, short_desc, description, price, original_price, category, image_url, stock, featured, active, weight, ingredients, benefits } = req.body;
     if (!name || !price) return res.status(400).json({ success: false, message: 'Name and price are required' });
 
-    const result = db.prepare(`
-      INSERT INTO products (name, short_desc, description, price, original_price, category, image_url, stock, featured, active, weight, ingredients, benefits)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(name, short_desc, description, parseFloat(price), original_price ? parseFloat(original_price) : null,
-      category || 'soap', image_url || '/images/default-product.jpg',
-      parseInt(stock) || 10, featured ? 1 : 0, active !== false ? 1 : 0,
-      weight, ingredients, benefits);
+    const { data: newProduct, error } = await supabase
+      .from('products')
+      .insert({
+        name,
+        short_desc,
+        description,
+        price: parseFloat(price),
+        original_price: original_price ? parseFloat(original_price) : null,
+        category: category || 'soap',
+        image_url: image_url || '/images/default-product.jpg',
+        stock: parseInt(stock) || 10,
+        featured: featured ? true : false,
+        active: active !== false ? true : false,
+        weight,
+        ingredients,
+        benefits
+      })
+      .select()
+      .single();
 
-    const newProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(result.lastInsertRowid);
+    if (error) throw error;
     res.json({ success: true, product: newProduct, message: 'Product created!' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -94,29 +111,42 @@ router.post('/products', requireAdmin, (req, res) => {
 });
 
 // UPDATE product
-router.put('/products/:id', requireAdmin, (req, res) => {
+router.put('/products/:id', requireAdmin, async (req, res) => {
   try {
     const { name, short_desc, description, price, original_price, category, image_url, stock, featured, active, weight, ingredients, benefits } = req.body;
-    const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
-    if (!existing) return res.status(404).json({ success: false, message: 'Product not found' });
 
-    db.prepare(`
-      UPDATE products SET name=?, short_desc=?, description=?, price=?, original_price=?, category=?,
-      image_url=?, stock=?, featured=?, active=?, weight=?, ingredients=?, benefits=?
-      WHERE id=?
-    `).run(
-      name || existing.name, short_desc || existing.short_desc,
-      description || existing.description, parseFloat(price) || existing.price,
-      original_price ? parseFloat(original_price) : existing.original_price,
-      category || existing.category, image_url || existing.image_url,
-      parseInt(stock) !== undefined ? parseInt(stock) : existing.stock,
-      featured !== undefined ? (featured ? 1 : 0) : existing.featured,
-      active !== undefined ? (active ? 1 : 0) : existing.active,
-      weight || existing.weight, ingredients || existing.ingredients, benefits || existing.benefits,
-      req.params.id
-    );
+    const { data: existing, error: fetchError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
 
-    const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+    if (fetchError || !existing) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    const updates = {
+      name: name || existing.name,
+      short_desc: short_desc || existing.short_desc,
+      description: description || existing.description,
+      price: parseFloat(price) || existing.price,
+      original_price: original_price ? parseFloat(original_price) : existing.original_price,
+      category: category || existing.category,
+      image_url: image_url || existing.image_url,
+      stock: parseInt(stock) !== undefined ? parseInt(stock) : existing.stock,
+      featured: featured !== undefined ? !!featured : existing.featured,
+      active: active !== undefined ? !!active : existing.active,
+      weight: weight || existing.weight,
+      ingredients: ingredients || existing.ingredients,
+      benefits: benefits || existing.benefits
+    };
+
+    const { data: updated, error: updateError } = await supabase
+      .from('products')
+      .update(updates)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
     res.json({ success: true, product: updated, message: 'Product updated!' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -124,11 +154,18 @@ router.put('/products/:id', requireAdmin, (req, res) => {
 });
 
 // DELETE product
-router.delete('/products/:id', requireAdmin, (req, res) => {
+router.delete('/products/:id', requireAdmin, async (req, res) => {
   try {
-    const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
-    if (!existing) return res.status(404).json({ success: false, message: 'Product not found' });
-    db.prepare('DELETE FROM products WHERE id = ?').run(req.params.id);
+    const { data: existing, error: fetchError } = await supabase
+      .from('products')
+      .select('id')
+      .eq('id', req.params.id)
+      .single();
+
+    if (fetchError || !existing) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    const { error } = await supabase.from('products').delete().eq('id', req.params.id);
+    if (error) throw error;
     res.json({ success: true, message: 'Product deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -138,18 +175,24 @@ router.delete('/products/:id', requireAdmin, (req, res) => {
 // ---- ORDERS MANAGEMENT ----
 
 // GET all orders
-router.get('/orders', requireAdmin, (req, res) => {
+router.get('/orders', requireAdmin, async (req, res) => {
   try {
     const { status } = req.query;
-    let query = 'SELECT * FROM orders';
-    const params = [];
-    if (status && status !== 'all') { query += ' WHERE status = ?'; params.push(status); }
-    query += ' ORDER BY created_at DESC';
-    const orders = db.prepare(query).all(...params);
-    const result = orders.map(order => {
-      const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
-      return { ...order, items };
-    });
+
+    let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data: orders, error } = await query;
+    if (error) throw error;
+
+    // Attach items to each order
+    const result = await Promise.all((orders || []).map(async order => {
+      const { data: items } = await supabase.from('order_items').select('*').eq('order_id', order.id);
+      return { ...order, items: items || [] };
+    }));
+
     res.json({ success: true, orders: result });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -157,12 +200,14 @@ router.get('/orders', requireAdmin, (req, res) => {
 });
 
 // UPDATE order status
-router.put('/orders/:id', requireAdmin, (req, res) => {
+router.put('/orders/:id', requireAdmin, async (req, res) => {
   try {
     const { status } = req.body;
     const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(status)) return res.status(400).json({ success: false, message: 'Invalid status' });
-    db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, req.params.id);
+
+    const { error } = await supabase.from('orders').update({ status }).eq('id', req.params.id);
+    if (error) throw error;
     res.json({ success: true, message: 'Order status updated' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -170,38 +215,52 @@ router.put('/orders/:id', requireAdmin, (req, res) => {
 });
 
 // ---- DASHBOARD STATS ----
-router.get('/dashboard', requireAdmin, (req, res) => {
+router.get('/dashboard', requireAdmin, async (req, res) => {
   try {
-    const totalProducts = db.prepare('SELECT COUNT(*) as c FROM products WHERE active = 1').get().c;
-    const totalOrders = db.prepare('SELECT COUNT(*) as c FROM orders').get().c;
-    const pendingOrders = db.prepare("SELECT COUNT(*) as c FROM orders WHERE status = 'pending'").get().c;
-    const totalRevenue = db.prepare("SELECT SUM(total_amount) as r FROM orders WHERE status != 'cancelled'").get().r || 0;
-    const recentOrders = db.prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT 5').all();
-    const lowStock = db.prepare('SELECT * FROM products WHERE stock < 5 AND active = 1').all();
-    res.json({ success: true, stats: { totalProducts, totalOrders, pendingOrders, totalRevenue, recentOrders, lowStock } });
+    const [
+      { count: totalProducts },
+      { count: totalOrders },
+      { count: pendingOrders },
+      { data: revenueData },
+      { data: recentOrders },
+      { data: lowStock }
+    ] = await Promise.all([
+      supabase.from('products').select('*', { count: 'exact', head: true }).eq('active', true),
+      supabase.from('orders').select('*', { count: 'exact', head: true }),
+      supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('orders').select('total_amount').neq('status', 'cancelled'),
+      supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(5),
+      supabase.from('products').select('*').lt('stock', 5).eq('active', true)
+    ]);
+
+    const totalRevenue = (revenueData || []).reduce((sum, o) => sum + (o.total_amount || 0), 0);
+
+    res.json({
+      success: true,
+      stats: { totalProducts, totalOrders, pendingOrders, totalRevenue, recentOrders: recentOrders || [], lowStock: lowStock || [] }
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
 // ---- SETTINGS ----
-router.get('/settings', requireAdmin, (req, res) => {
+router.get('/settings', requireAdmin, async (req, res) => {
   try {
-    const settings = db.prepare('SELECT key, value FROM settings').all();
-    const map = Object.fromEntries(settings.map(s => [s.key, s.value]));
+    const { data: settings, error } = await supabase.from('settings').select('key, value');
+    if (error) throw error;
+    const map = Object.fromEntries((settings || []).map(s => [s.key, s.value]));
     res.json({ success: true, settings: map });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-router.put('/settings', requireAdmin, (req, res) => {
+router.put('/settings', requireAdmin, async (req, res) => {
   try {
-    const update = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
-    const updateMany = db.transaction((entries) => {
-      for (const [key, value] of entries) update.run(key, value);
-    });
-    updateMany(Object.entries(req.body));
+    const entries = Object.entries(req.body).map(([key, value]) => ({ key, value }));
+    const { error } = await supabase.from('settings').upsert(entries, { onConflict: 'key' });
+    if (error) throw error;
     res.json({ success: true, message: 'Settings saved' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

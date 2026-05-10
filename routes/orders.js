@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const supabase = require('../db');
 
 // Place order
-router.post('/place', (req, res) => {
+router.post('/place', async (req, res) => {
   try {
     const { customer_name, customer_email, customer_phone, customer_address, city, pincode, payment_method, notes } = req.body;
     const cart = req.session.cart || [];
@@ -15,29 +15,62 @@ router.post('/place', (req, res) => {
 
     const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
 
-    const orderResult = db.prepare(`
-      INSERT INTO orders (customer_name, customer_email, customer_phone, customer_address, city, pincode, total_amount, payment_method, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(customer_name, customer_email, customer_phone, customer_address, city, pincode, total, payment_method || 'cod', notes);
+    // Insert order
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        customer_name,
+        customer_email,
+        customer_phone,
+        customer_address,
+        city,
+        pincode,
+        total_amount: total,
+        payment_method: payment_method || 'cod',
+        notes,
+        status: 'pending'
+      })
+      .select()
+      .single();
 
-    const orderId = orderResult.lastInsertRowid;
-    const insertItem = db.prepare('INSERT INTO order_items (order_id, product_id, product_name, quantity, price) VALUES (?, ?, ?, ?, ?)');
+    if (orderError) throw orderError;
+    const orderId = orderData.id;
 
-    cart.forEach(item => {
-      insertItem.run(orderId, item.id, item.name, item.quantity, item.price);
-      // Reduce stock
-      db.prepare('UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ?').run(item.quantity, item.id);
-    });
+    // Insert order items
+    const orderItems = cart.map(item => ({
+      order_id: orderId,
+      product_id: item.id,
+      product_name: item.name,
+      quantity: item.quantity,
+      price: item.price
+    }));
+
+    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+    if (itemsError) throw itemsError;
+
+    // Reduce stock for each product
+    for (const item of cart) {
+      const { data: prod } = await supabase.from('products').select('stock').eq('id', item.id).single();
+      if (prod) {
+        const newStock = Math.max(0, prod.stock - item.quantity);
+        await supabase.from('products').update({ stock: newStock }).eq('id', item.id);
+      }
+    }
 
     req.session.cart = [];
-    const settings = db.prepare('SELECT key, value FROM settings').all();
-    const settingsMap = Object.fromEntries(settings.map(s => [s.key, s.value]));
+
+    // Get WhatsApp setting
+    const { data: waSetting } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', 'store_whatsapp')
+      .single();
 
     res.json({
       success: true,
       orderId,
       total,
-      whatsapp: settingsMap.store_whatsapp,
+      whatsapp: waSetting ? waSetting.value : null,
       message: 'Order placed successfully!'
     });
   } catch (err) {
@@ -46,12 +79,22 @@ router.post('/place', (req, res) => {
 });
 
 // GET order by ID
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-    const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
-    res.json({ success: true, order, items });
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (orderError || !order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    const { data: items } = await supabase
+      .from('order_items')
+      .select('*')
+      .eq('order_id', order.id);
+
+    res.json({ success: true, order, items: items || [] });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

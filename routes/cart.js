@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const supabase = require('../db');
 
 // GET cart
 router.get('/', (req, res) => {
@@ -11,11 +11,18 @@ router.get('/', (req, res) => {
 });
 
 // ADD to cart
-router.post('/add', (req, res) => {
+router.post('/add', async (req, res) => {
   try {
     const { productId, quantity = 1 } = req.body;
-    const product = db.prepare('SELECT * FROM products WHERE id = ? AND active = 1').get(productId);
-    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    const { data: product, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .eq('active', true)
+      .single();
+
+    if (error || !product) return res.status(404).json({ success: false, message: 'Product not found' });
 
     if (!req.session.cart) req.session.cart = [];
     const existing = req.session.cart.find(i => i.id === product.id);
