@@ -666,6 +666,19 @@ img { max-width: 100%; }
 
 .whatsapp-float:hover { transform: scale(1.1); }
 
+/* ---- RESPONSIVE LAYOUTS ---- */
+.split-layout {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 2rem;
+}
+
+@media (max-width: 850px) {
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .hero-title { font-size: 2rem; }
   .admin-sidebar { display: none; }
